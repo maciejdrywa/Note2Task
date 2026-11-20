@@ -1,0 +1,18 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "ugotować obiad",
+      "godzina": "15:20"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "nastawić pranie",
+      "godzina": "19:40"
+    },
+    {
+      "czynność": "lekcja języka angielskiego (możliwa kartkówka ze słówek)",
+      "godzina": "09:50"
+    }
+  ]
+}

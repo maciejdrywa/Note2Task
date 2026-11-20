@@ -1,0 +1,32 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "pojeździć na rolkach",
+      "godzina": "17:30"
+    },
+    {
+      "czynność": "zapakować kanapki na drogę",
+      "godzina": "08:00"
+    },
+    {
+      "czynność": "oddać książki do biblioteki",
+      "godzina": "10:45"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "ugotować zupę pomidorową",
+      "godzina": "18:25"
+    },
+    {
+      "czynność": "przygotować ciasto na naleśniki",
+      "godzina": "20:15"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "odwiedzić dziadka i ustawić mu telefon",
+      "godzina": "14:20"
+    }
+  ]
+}

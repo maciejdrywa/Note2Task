@@ -1,0 +1,18 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "odebrać Maję z zajęć",
+      "godzina": "17:00"
+    },
+    {
+      "czynność": "spakować plecak",
+      "godzina": "21:30"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "próba chóru",
+      "godzina": "13:05"
+    }
+  ]
+}

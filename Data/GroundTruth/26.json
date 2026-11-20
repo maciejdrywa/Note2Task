@@ -1,0 +1,40 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "kupić sól do posypania schodów",
+      "godzina": "10:15"
+    },
+    {
+      "czynność": "przygotować termos na rano",
+      "godzina": "21:20"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "odśnieżyć wejście do garażu",
+      "godzina": "07:30"
+    },
+    {
+      "czynność": "wysuszyć rękawiczki przy grzejniku",
+      "godzina": "19:00"
+    },
+    {
+      "czynność": "pojechać na lodowisko",
+      "godzina": "16:55"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "zanieść sanki do piwnicy",
+      "godzina": "12:40"
+    },
+    {
+      "czynność": "zrobić kakao",
+      "godzina": "14:20"
+    },
+    {
+      "czynność": "wyrzucić stare gazety",
+      "godzina": "08:55"
+    }
+  ]
+}

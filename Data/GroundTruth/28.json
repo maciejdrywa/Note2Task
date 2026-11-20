@@ -1,0 +1,54 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "kupić nasiona rzodkiewki",
+      "godzina": "08:45"
+    },
+    {
+      "czynność": "zanieść część ciastek sąsiadce",
+      "godzina": "14:45"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "oczyścić doniczki z ziemi",
+      "godzina": "10:10"
+    },
+    {
+      "czynność": "upiec kruche ciasteczka",
+      "godzina": "13:20"
+    },
+    {
+      "czynność": "pograć w planszówki z Igą",
+      "godzina": "19:10"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "opisać ceny na karteczkach",
+      "godzina": "17:50"
+    }
+  ],
+  "zdanie4": [
+    {
+      "czynność": "wysiać rzodkiewkę",
+      "godzina": "11:35"
+    },
+    {
+      "czynność": "przejrzeć książki na kiermasz",
+      "godzina": "16:15"
+    }
+  ],
+  "zdanie5": [
+    {
+      "czynność": "wyjąć masło z lodówki",
+      "godzina": "07:25"
+    }
+  ],
+  "zdanie6": [
+    {
+      "czynność": "wstawić kubki do zmywarki",
+      "godzina": "21:35"
+    }
+  ]
+}

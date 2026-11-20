@@ -1,0 +1,26 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "rozmowa z wychowawcą",
+      "godzina": "10:30"
+    },
+    {
+      "czynność": "naładować słuchawki",
+      "godzina": "22:10"
+    },
+    {
+      "czynność": "podlać zioła",
+      "godzina": "08:05"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "kupić papier do drukarki",
+      "godzina": "14:35"
+    },
+    {
+      "czynność": "ulepić pierogi",
+      "godzina": "17:45"
+    }
+  ]
+}

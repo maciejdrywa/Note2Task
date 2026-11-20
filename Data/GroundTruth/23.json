@@ -1,0 +1,46 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "zrobić sałatkę z kuskusem",
+      "godzina": "12:30"
+    },
+    {
+      "czynność": "przetrzeć lustro w łazience",
+      "godzina": "07:55"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "zanieść kurtkę do pralni",
+      "godzina": "09:10"
+    },
+    {
+      "czynność": "lekcja gry na gitarze",
+      "godzina": "18:00"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "powiesić zasłony w pokoju",
+      "godzina": "14:05"
+    },
+    {
+      "czynność": "posłuchać nowej płyty",
+      "godzina": "21:05"
+    },
+    {
+      "czynność": "nastroić gitarę",
+      "godzina": "19:35"
+    }
+  ],
+  "zdanie4": [
+    {
+      "czynność": "kupić haczyki do zasłon",
+      "godzina": "10:55"
+    },
+    {
+      "czynność": "oddać Ani formę do ciasta",
+      "godzina": "16:25"
+    }
+  ]
+}

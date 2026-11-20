@@ -1,0 +1,22 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "napompować koła w rowerze",
+      "godzina": "15:35"
+    },
+    {
+      "czynność": "podlać kwiaty",
+      "godzina": "20:05"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "lekcja matematyki",
+      "godzina": "08:10"
+    },
+    {
+      "czynność": "dokończyć zadanie 4 przed lekcją",
+      "godzina": null
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "kupić chleb",
+      "godzina": "14:10"
+    },
+    {
+      "czynność": "lekcja języka polskiego (wziąć lekturę)",
+      "godzina": "08:30"
+    },
+    {
+      "czynność": "oddać zeszyt Oli",
+      "godzina": "12:00"
+    }
+  ]
+}
