@@ -1,0 +1,42 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "zasłonić szyby w aucie przed słońcem",
+      "godzina": "06:45"
+    },
+    {
+      "czynność": "oddać kijki sąsiadowi",
+      "godzina": "20:40"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "wypożyczyć kijki trekkingowe",
+      "godzina": "11:50"
+    },
+    {
+      "czynność": "pojechać na punkt widokowy",
+      "godzina": "16:10"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "zgrać zdjęcia z aparatu",
+      "godzina": "18:35"
+    },
+    {
+      "czynność": "zawieźć laptop do serwisu",
+      "godzina": "08:15"
+    }
+  ],
+  "zdanie4": [
+    {
+      "czynność": "zjeść obiad na mieście",
+      "godzina": "13:25"
+    },
+    {
+      "czynność": "wydrukować plan wycieczki",
+      "godzina": "09:40"
+    }
+  ]
+}

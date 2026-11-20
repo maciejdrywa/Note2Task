@@ -1,0 +1,18 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "odebrać paczkę z paczkomatu",
+      "godzina": "16:15"
+    },
+    {
+      "czynność": "jechać autobusem",
+      "godzina": "07:40"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "wziąć strój na WF",
+      "godzina": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "kupić taśmę i wałek",
+      "godzina": "09:05"
+    },
+    {
+      "czynność": "umyć wałek",
+      "godzina": "18:35"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "pomalować ścianę w przedpokoju",
+      "godzina": "17:25"
+    }
+  ]
+}

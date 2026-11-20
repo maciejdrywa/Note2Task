@@ -1,0 +1,44 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "wyprowadzić rower z piwnicy",
+      "godzina": "08:25"
+    },
+    {
+      "czynność": "pójść na warsztaty ceramiczne",
+      "godzina": "16:40"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "przetrzeć i nasmarować łańcuch",
+      "godzina": "09:40"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "przewieźć skrzynkę jabłek do cioci",
+      "godzina": "14:10"
+    }
+  ],
+  "zdanie4": [
+    {
+      "czynność": "dokręcić bagażnik",
+      "godzina": "12:45"
+    },
+    {
+      "czynność": "naszkicować wzór na kubek",
+      "godzina": "18:50"
+    }
+  ],
+  "zdanie5": [
+    {
+      "czynność": "wyłączyć budzik na jutro",
+      "godzina": "21:00"
+    },
+    {
+      "czynność": "podjechać po klucz imbusowy do Michała",
+      "godzina": "11:15"
+    }
+  ]
+}

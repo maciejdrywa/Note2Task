@@ -1,0 +1,54 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "wyczyścić bidon",
+      "godzina": "19:15"
+    },
+    {
+      "czynność": "zapakować ryż z warzywami na jutro",
+      "godzina": "14:30"
+    },
+    {
+      "czynność": "odebrać wyniki zdjęć z konkursu",
+      "godzina": "15:45"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "wyciąć litery na gazetkę",
+      "godzina": "13:10"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "wyciągnąć pojemniki na obiad",
+      "godzina": "07:10"
+    }
+  ],
+  "zdanie4": [
+    {
+      "czynność": "zrobić zdjęcie notatek od Basi",
+      "godzina": "09:25"
+    },
+    {
+      "czynność": "przejrzeć plan lekcji",
+      "godzina": "20:50"
+    }
+  ],
+  "zdanie5": [
+    {
+      "czynność": "kupić bibułę na apel",
+      "godzina": "11:45"
+    }
+  ],
+  "zdanie6": [
+    {
+      "czynność": "pójść na ściankę wspinaczkową",
+      "godzina": "17:20"
+    },
+    {
+      "czynność": "lekcja biologii (temat o grzybach)",
+      "godzina": "08:35"
+    }
+  ]
+}

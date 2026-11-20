@@ -1,0 +1,38 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "obejrzeć dokument o górach",
+      "godzina": "20:10"
+    },
+    {
+      "czynność": "wybrać zdjęcie do ramki",
+      "godzina": "15:50"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "zawieźć Iwonę na dworzec",
+      "godzina": "09:35"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "odebrać ramkę od szklarza",
+      "godzina": "11:25"
+    },
+    {
+      "czynność": "sprawdzić ciśnienie w oponach auta",
+      "godzina": "07:05"
+    },
+    {
+      "czynność": "rozwiesić lampki na balkonie",
+      "godzina": "18:20"
+    }
+  ],
+  "zdanie4": [
+    {
+      "czynność": "skleić oderwany narożnik albumu",
+      "godzina": "13:05"
+    }
+  ]
+}

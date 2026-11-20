@@ -1,0 +1,28 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "wyczyścić akwarium",
+      "godzina": "19:55"
+    },
+    {
+      "czynność": "nakleić łatkę na dętkę",
+      "godzina": "15:25"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "pójść na basen (wziąć klapki)",
+      "godzina": "16:50"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "zanieść klucze sąsiadce",
+      "godzina": "07:50"
+    },
+    {
+      "czynność": "sprawdzian z mapy na geografii",
+      "godzina": "11:10"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "wywiesić pranie",
+      "godzina": "06:55"
+    },
+    {
+      "czynność": "wysłać formularz do sekretariatu",
+      "godzina": "12:00"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "przesadzić aloes",
+      "godzina": "18:45"
+    },
+    {
+      "czynność": "lekcja języka niemieckiego (powtórzyć czasowniki)",
+      "godzina": "08:25"
+    },
+    {
+      "czynność": "odebrać zdjęcia od fotografa",
+      "godzina": "15:55"
+    }
+  ]
+}

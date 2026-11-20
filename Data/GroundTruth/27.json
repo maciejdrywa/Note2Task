@@ -1,0 +1,48 @@
+{
+  "zdanie1": [
+    {
+      "czynność": "rozgrzewka na stadionie",
+      "godzina": "09:55"
+    },
+    {
+      "czynność": "oddać numer startowy trenerowi",
+      "godzina": "16:30"
+    }
+  ],
+  "zdanie2": [
+    {
+      "czynność": "wyprać koszulkę",
+      "godzina": "18:05"
+    }
+  ],
+  "zdanie3": [
+    {
+      "czynność": "odebrać dyplom",
+      "godzina": "13:15"
+    },
+    {
+      "czynność": "spotkać się z drużyną pod szkołą",
+      "godzina": "08:20"
+    }
+  ],
+  "zdanie4": [
+    {
+      "czynność": "pobiec sztafetę",
+      "godzina": "11:40"
+    },
+    {
+      "czynność": "rozciąganie na macie",
+      "godzina": "20:30"
+    },
+    {
+      "czynność": "zjeść kanapki w autobusie",
+      "godzina": "14:50"
+    }
+  ],
+  "zdanie5": [
+    {
+      "czynność": "zapakować strój na zawody",
+      "godzina": "06:50"
+    }
+  ]
+}
