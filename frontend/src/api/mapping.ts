@@ -1,7 +1,7 @@
-import type { ApiEventTime, ApiRequest, ApiResponse, NoteResult, Task } from "./types";
+import type { ApiEventTime, ApiRequest, ApiResponse, ApiScheduleResponse, NoteResult, Task } from "./types";
 
 export function toApiRequest(note: string): ApiRequest {
-  return { tekst: note.trim() };
+  return { text: note.trim() };
 }
 
 /**
@@ -43,4 +43,8 @@ export function fromApiResponse(res: ApiResponse): NoteResult {
       };
     });
   return { tasks: sortTasks(tasks) };
+}
+
+export function fromScheduleResponse(report: ApiScheduleResponse): NoteResult {
+  return { ...fromApiResponse(report.results.map((result) => result.event)), schedule: report };
 }

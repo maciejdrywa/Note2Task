@@ -27,5 +27,5 @@ export async function checkBackend(): Promise<BackendHealth> {
   }
 }
 
-/** Limit czasu na analizę notatki przez model (VITE_EXTRACT_TIMEOUT_S, domyślnie 120 s). */
-export const EXTRACT_TIMEOUT_MS = (Number(import.meta.env.VITE_EXTRACT_TIMEOUT_S) || 120) * 1000;
+/** Limit czasu na analizę i zapis (VITE_EXTRACT_TIMEOUT_S, domyślnie 240 s). */
+export const EXTRACT_TIMEOUT_MS = (Number(import.meta.env.VITE_EXTRACT_TIMEOUT_S) || 240) * 1000;

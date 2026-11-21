@@ -86,10 +86,10 @@ const delay = (ms: number, signal?: AbortSignal) =>
 
 export async function mockPostExtract(req: ApiRequest, signal?: AbortSignal): Promise<ApiResponse> {
   await delay(1500 + Math.random() * 1000, signal); // ~czas odpowiedzi modelu, żeby było widać „myślenie”
-  if (req.tekst.includes("#error")) {
+  if (req.text.includes("#error")) {
     throw new ApiError("Symulowany błąd backendu (mock)", 500);
   }
   const date = tomorrow();
-  const gt = groundTruthByText.get(normalize(req.tekst));
-  return gt ? gt.map((t) => toEvent(t["czynność"], t.godzina, date)) : heuristic(req.tekst, date);
+  const gt = groundTruthByText.get(normalize(req.text));
+  return gt ? gt.map((t) => toEvent(t["czynność"], t.godzina, date)) : heuristic(req.text, date);
 }

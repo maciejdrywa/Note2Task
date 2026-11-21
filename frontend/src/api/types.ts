@@ -1,12 +1,12 @@
 // Kontrakt z backendem (ustalony z backendem 21.11.2026).
 // Zmiana formatu API = zmiana tylko w tym folderze.
 //
-//   POST {VITE_API_URL}/extract
-//   body:     { "tekst": "cała notatka" }
-//   response: ApiEvent[]  (format jak wydarzenia Google Calendar)
+//   POST {VITE_API_URL}/schedule
+//   body:     { "text": "cała notatka" }
+//   response: ApiScheduleResponse (raport zapisu w Google Calendar)
 
 export interface ApiRequest {
-  tekst: string;
+  text: string;
 }
 
 export interface ApiEventTime {
@@ -17,12 +17,26 @@ export interface ApiEventTime {
 
 export interface ApiEvent {
   summary: string;
-  description: string | null;
+  description?: string | null;
   start: ApiEventTime | null;
   end: ApiEventTime | null;
 }
 
 export type ApiResponse = ApiEvent[];
+
+export interface ApiScheduleResult {
+  event: ApiEvent;
+  status: "created" | "failed" | "unknown" | "not_attempted";
+  google_event_id?: string;
+  html_link?: string;
+  error?: { code: string; message: string };
+}
+
+export interface ApiScheduleResponse {
+  calendar_id: string;
+  status: "completed" | "partial" | "failed";
+  results: ApiScheduleResult[];
+}
 
 // --- Model używany w UI (niezależny od nazw pól z API) ---
 
@@ -38,6 +52,7 @@ export interface Task {
 
 export interface NoteResult {
   tasks: Task[];
+  schedule?: ApiScheduleResponse;
 }
 
 export class ApiError extends Error {

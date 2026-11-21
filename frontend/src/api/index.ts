@@ -1,16 +1,16 @@
-import { postExtract } from "./client";
-import { fromApiResponse, toApiRequest } from "./mapping";
+import { postSchedule } from "./client";
+import { fromApiResponse, fromScheduleResponse, toApiRequest } from "./mapping";
 import { mockPostExtract } from "./mock";
 import type { NoteResult } from "./types";
 
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 
-/** Główne wejście dla UI: notatka -> zadania (posortowane po dacie i godzinie). */
+/** Notatka -> zadania i zapis w Google Calendar; mock nie wykonuje zapisów. */
 export async function extractTasks(note: string, signal?: AbortSignal): Promise<NoteResult> {
   const req = toApiRequest(note);
-  if (!req.tekst) return { tasks: [] };
-  const res = USE_MOCK ? await mockPostExtract(req, signal) : await postExtract(req, signal);
-  return fromApiResponse(res);
+  if (!req.text) return { tasks: [] };
+  if (USE_MOCK) return fromApiResponse(await mockPostExtract(req, signal));
+  return fromScheduleResponse(await postSchedule(req, signal));
 }
 
 export { sampleNotes, type SampleNote } from "./mock";
