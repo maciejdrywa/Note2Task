@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
-import { extractTasks, type Task } from "@/api";
+import { EXTRACT_TIMEOUT_MS, extractTasks, type Task } from "@/api";
 import { CalendarView, type TaskRef } from "@/components/CalendarView";
 import { ChatView, type ChatTab, type ExtractStatus } from "@/components/ChatView";
 import { SettingsPanel } from "@/components/SettingsPanel";
@@ -104,7 +104,14 @@ function App() {
       aborts.current.get(id)?.abort();
       const ctrl = new AbortController();
       aborts.current.set(id, ctrl);
-      setStatuses((s) => ({ ...s, [id]: { state: "loading" } }));
+      setStatuses((s) => ({ ...s, [id]: { state: "loading", startedAt: Date.now() } }));
+
+      // limit czasu: model nie odpowiedział -> przerywamy zapytanie
+      let timedOut = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        ctrl.abort();
+      }, EXTRACT_TIMEOUT_MS);
 
       try {
         const result = await extractTasks(text, ctrl.signal);
@@ -121,14 +128,28 @@ function App() {
           setView((v) => (v?.kind === "chat" && v.noteId === id ? { ...v, tab: "tasks" } : v));
         }
       } catch (e) {
-        if (ctrl.signal.aborted) return;
+        if (timedOut) {
+          const message = `Model nie odpowiedział w ciągu ${Math.round(EXTRACT_TIMEOUT_MS / 1000)} s. Sprawdź, czy backend działa, i spróbuj ponownie.`;
+          setStatuses((s) => ({ ...s, [id]: { state: "error", message } }));
+          return;
+        }
+        if (ctrl.signal.aborted) return; // zatrzymane przez użytkownika albo nowe zapytanie
         setStatuses((s) => ({ ...s, [id]: { state: "error", message: e instanceof Error ? e.message : String(e) } }));
       } finally {
+        clearTimeout(timer);
         if (aborts.current.get(id) === ctrl) aborts.current.delete(id);
       }
     },
     [updateNote],
   );
+
+  /** „Zatrzymaj”: przerywa zapytanie; poprzednie zadania (jeśli były) zostają. */
+  const cancelExtract = useCallback((id: string) => {
+    aborts.current.get(id)?.abort();
+    aborts.current.delete(id);
+    const hadResult = !!notesRef.current.find((n) => n.id === id)?.result;
+    setStatuses((s) => ({ ...s, [id]: hadResult ? IDLE : { state: "cancelled" } }));
+  }, []);
 
   const deleteNote = useCallback((id: string) => {
     aborts.current.get(id)?.abort();
@@ -225,6 +246,7 @@ function App() {
                 updateNote(activeNote.id, (n) => ({ ...n, ...patch, updatedAt: new Date().toISOString() }))
               }
               onAnalyze={() => extract(activeNote.id)}
+              onCancel={() => cancelExtract(activeNote.id)}
               onDelete={() => deleteNote(activeNote.id)}
               onNew={() => addNote()}
               onToggleTask={(taskId) => toggleTask({ noteId: activeNote.id, taskId })}

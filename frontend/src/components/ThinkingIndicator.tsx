@@ -6,13 +6,20 @@ import { cn } from "@/lib/utils";
 const STEPS = ["Czytam notatkę", "Szukam terminów i godzin", "Wyodrębniam czynności", "Układam zadania w kalendarzu"];
 const STEP_MS = 900;
 
-export function ThinkingIndicator() {
-  const [step, setStep] = useState(0);
+/** Po tylu sekundach podpowiadamy, że lokalny model po prostu długo liczy. */
+const SLOW_AFTER_S = 15;
+
+export function ThinkingIndicator({ startedAt }: { startedAt: number }) {
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const t = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), STEP_MS);
+    const t = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(t);
   }, []);
+
+  const elapsedMs = Math.max(0, now - startedAt);
+  const seconds = Math.floor(elapsedMs / 1000);
+  const step = Math.min(Math.floor(elapsedMs / STEP_MS), STEPS.length - 1);
 
   return (
     <div className="flex gap-3">
@@ -20,7 +27,10 @@ export function ThinkingIndicator() {
         <Sparkles className="size-4 animate-pulse" />
       </div>
       <div className="flex flex-col gap-2 pt-1">
-        <span className="thinking-shimmer text-sm font-medium">Myślę…</span>
+        <span className="flex items-baseline gap-2">
+          <span className="thinking-shimmer text-sm font-medium">Myślę…</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{seconds} s</span>
+        </span>
         <ul className="flex flex-col gap-1 border-l pl-3">
           {STEPS.slice(0, step + 1).map((s, i) => {
             const current = i === step;
@@ -39,6 +49,11 @@ export function ThinkingIndicator() {
             );
           })}
         </ul>
+        {seconds >= SLOW_AFTER_S && (
+          <p className="animate-in text-xs text-muted-foreground fade-in">
+            Lokalny model potrzebuje chwili — możesz poczekać albo zatrzymać analizę.
+          </p>
+        )}
       </div>
     </div>
   );

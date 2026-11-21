@@ -15,5 +15,6 @@ export async function extractTasks(note: string, signal?: AbortSignal): Promise<
 
 export { sampleNotes, type SampleNote } from "./mock";
 export { API_URL } from "./client";
+export { checkBackend, EXTRACT_TIMEOUT_MS, type BackendHealth } from "./health";
 export { sortTasks } from "./mapping";
 export * from "./types";

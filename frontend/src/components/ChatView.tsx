@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowUp, ListTodo, MessageSquarePlus, Pencil, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUp,
+  ListTodo,
+  MessageSquarePlus,
+  Pencil,
+  RotateCcw,
+  Sparkles,
+  Square,
+  Trash2,
+} from "lucide-react";
 import { sampleNotes, USE_MOCK, type Task } from "@/api";
 import {
   AlertDialog,
@@ -22,7 +32,11 @@ import { displayTitle, isStale, taskStats, type Note } from "@/storage";
 import { TaskResults } from "./TaskResults";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 
-export type ExtractStatus = { state: "idle" } | { state: "loading" } | { state: "error"; message: string };
+export type ExtractStatus =
+  | { state: "idle" }
+  | { state: "loading"; startedAt: number }
+  | { state: "error"; message: string }
+  | { state: "cancelled" };
 export type ChatTab = "chat" | "tasks";
 
 interface Props {
@@ -32,6 +46,7 @@ interface Props {
   onTab: (tab: ChatTab) => void;
   onChange: (patch: Partial<Pick<Note, "title" | "text">>) => void;
   onAnalyze: () => void;
+  onCancel: () => void;
   onDelete: () => void;
   onNew: () => void;
   onToggleTask: (taskId: string) => void;
@@ -124,7 +139,7 @@ function EmptyState() {
 }
 
 export function ChatView(props: Props) {
-  const { note, status, tab, onTab, onChange, onAnalyze, onDelete, onNew } = props;
+  const { note, status, tab, onTab, onChange, onAnalyze, onCancel, onDelete, onNew } = props;
   const [editing, setEditing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -205,11 +220,17 @@ export function ChatView(props: Props) {
       <TabsContent value="chat" className="flex min-h-0 flex-1 flex-col">
         <div ref={scrollRef} className="flex flex-1 flex-col overflow-y-auto">
           <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-6">
-            {!analyzed && !loading && status.state !== "error" && <EmptyState />}
+            {!analyzed && status.state === "idle" && <EmptyState />}
 
             {(loading || analyzed) && <UserBubble text={loading ? note.text : (note.extractedText ?? "")} />}
 
-            {loading && <ThinkingIndicator />}
+            {status.state === "loading" && <ThinkingIndicator startedAt={status.startedAt} />}
+            {status.state === "cancelled" && (
+              <div className="flex flex-1 flex-col items-center justify-end gap-1 pb-2 text-center text-sm text-muted-foreground">
+                <Square className="size-4" />
+                Analiza zatrzymana. Możesz poprawić notatkę i spróbować ponownie.
+              </div>
+            )}
             {!loading && status.state === "error" && <ErrorReply message={status.message} onRetry={analyze} />}
             {!loading && status.state !== "error" && analyzed && (
               <ResultReply note={note} onShow={() => onTab("tasks")} />
@@ -267,6 +288,12 @@ export function ChatView(props: Props) {
                     Analizuj <ArrowUp />
                   </Button>
                 </div>
+              </div>
+            ) : loading ? (
+              <div className="flex items-center justify-center">
+                <Button variant="outline" size="sm" onClick={onCancel}>
+                  <Square className="fill-current" /> Zatrzymaj
+                </Button>
               </div>
             ) : (
               !loading && (

@@ -4,6 +4,8 @@ import { API_URL, USE_MOCK } from "@/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useBackendHealth } from "@/hooks/useBackendHealth";
 import { dayLabel, noteDay } from "@/lib/dates";
 import { matchesNote, parseQuery } from "@/lib/search";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,43 @@ interface Props {
   onSelectNote: (id: string) => void;
   onSelectDay: (day: string) => void;
   onNew: () => void;
+}
+
+const HEALTH_INFO = {
+  checking: { dot: "bg-muted-foreground animate-pulse", text: "Sprawdzam połączenie z backendem…" },
+  ok: { dot: "bg-success", text: "Backend działa" },
+  cors: {
+    dot: "bg-amber-500",
+    text: "Backend działa, ale blokuje aplikację (brak CORS dla http://localhost:1420 i http://tauri.localhost)",
+  },
+  down: { dot: "bg-destructive", text: "Brak połączenia z backendem" },
+} as const;
+
+/** Znaczek MOCK/API; w trybie API z kropką stanu połączenia (sprawdzane co 10 s). */
+function BackendBadge() {
+  const health = useBackendHealth();
+  if (USE_MOCK || !health) {
+    return (
+      <Badge variant="secondary" className="ml-auto text-[10px] uppercase" title="Dane z ../Data (VITE_USE_MOCK=true)">
+        mock
+      </Badge>
+    );
+  }
+  const info = HEALTH_INFO[health];
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge variant="secondary" className="ml-auto gap-1.5 text-[10px] uppercase" aria-label={info.text}>
+          <span className={cn("size-2 rounded-full", info.dot)} />
+          API
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-64">
+        <p className="font-medium">{info.text}</p>
+        <p className="opacity-70">{API_URL}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 export function Sidebar(props: Props) {
@@ -43,13 +82,7 @@ export function Sidebar(props: Props) {
         <div className="flex items-center gap-2 px-1 pt-1 font-semibold">
           <img src="/icon.svg" alt="" className="size-6" />
           <span>Note2Task</span>
-          <Badge
-            variant="secondary"
-            className="ml-auto text-[10px] uppercase"
-            title={USE_MOCK ? "Dane z ../Data (VITE_USE_MOCK=true)" : API_URL}
-          >
-            {USE_MOCK ? "mock" : "API"}
-          </Badge>
+          <BackendBadge />
         </div>
 
         <MiniCalendar busyDays={busyDays} selectedDay={calendarDay} onSelectDay={onSelectDay} />
