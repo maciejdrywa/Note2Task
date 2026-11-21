@@ -13,3 +13,9 @@ __pycache__/
 events_*.json
 output_*.json
 evaluation_results.json
+
+# Local configuration
+.env
+.env.*
+!.env.example
+*.log
