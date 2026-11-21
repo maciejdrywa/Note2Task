@@ -5,8 +5,8 @@ import re
 from typing import Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
 
-from src.config import DEFAULT_DURATION_MINUTES, DEFAULT_TIMEZONE
-from src.schemas import CalendarDateTime, CalendarEvent, ExtractedTaskRaw, GroundTruthTask
+from backend.core.config import get_settings
+from backend.models.calendar import CalendarDateTime, CalendarEvent, ExtractedTaskRaw, GroundTruthTask
 
 # Słownik polskich liczebników głównych i ułamkowych na wartości liczbowe
 POLISH_NUMBERS = {
@@ -270,11 +270,13 @@ def parse_polish_time_expression(expr: str) -> Tuple[Optional[str], Optional[str
     return None, None, None
 
 
-def resolve_task_times(task: ExtractedTaskRaw, default_duration_min: int = DEFAULT_DURATION_MINUTES) -> Tuple[str, str, int]:
+def resolve_task_times(task: ExtractedTaskRaw, default_duration_min: Optional[int] = None) -> Tuple[str, str, int]:
     """
     Ustala ostateczną godzinę rozpoczęcia, zakończenia oraz czas trwania zadania.
     Łączy predykcję LLM ze strażnikiem deterministycznym, stosując Smart Fallback.
     """
+    if default_duration_min is None:
+        default_duration_min = get_settings().default_duration_minutes
     parsed_start, parsed_end, parsed_duration = parse_polish_time_expression(task.wyrazenie_czasu or "")
 
     # Smart Fallback: Jeśli deterministyczny parser zwrócił pełną godzinę (np. "20:00"),
@@ -338,7 +340,7 @@ def resolve_task_times(task: ExtractedTaskRaw, default_duration_min: int = DEFAU
 def resolve_event_date(relative_str: Optional[str], base_date: Optional[datetime.date] = None) -> datetime.date:
     """Rozwiązuje datę względną (np. 'dzisiaj', 'jutro', 'pojutrze', 'w piątek', 'w weekend', 'za 3 dni') względem daty bazowej."""
     if base_date is None:
-        base_date = datetime.date.today()
+        base_date = datetime.datetime.now(ZoneInfo(get_settings().default_timezone)).date()
 
     if not relative_str:
         return base_date
@@ -380,10 +382,12 @@ def resolve_event_date(relative_str: Optional[str], base_date: Optional[datetime
 def create_calendar_event(
     task: ExtractedTaskRaw,
     base_date: Optional[datetime.date] = None,
-    time_zone: str = DEFAULT_TIMEZONE,
-    default_duration_min: int = DEFAULT_DURATION_MINUTES
+    time_zone: Optional[str] = None,
+    default_duration_min: Optional[int] = None
 ) -> CalendarEvent:
     """Tworzy pełny obiekt CalendarEvent gotowy dla Google Calendar API."""
+    if time_zone is None:
+        time_zone = get_settings().default_timezone
     start_time_str, end_time_str, _ = resolve_task_times(task, default_duration_min)
     event_date = resolve_event_date(task.data_wzgledna, base_date)
 

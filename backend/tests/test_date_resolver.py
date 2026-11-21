@@ -4,7 +4,7 @@ import datetime
 from zoneinfo import ZoneInfo
 import pytest
 
-from src.date_resolver import (
+from backend.services.date_service import (
     parse_polish_time_expression,
     resolve_task_times,
     create_calendar_event,
@@ -12,7 +12,7 @@ from src.date_resolver import (
     resolve_event_date,
     parse_word_or_digit_hour,
 )
-from src.schemas import ExtractedTaskRaw
+from backend.models.calendar import ExtractedTaskRaw
 
 
 def test_parse_exact_time():

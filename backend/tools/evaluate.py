@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
 """Narzędzie ewaluacji modelu Note2Task na zbiorze Data/GroundTruth."""
 
-import os
 import sys
 from pathlib import Path
-
-# Automatyczne przełączenie na środowisko .venv, jeśli uruchomiono zwykłym python3
-venv_python = Path(__file__).resolve().parent / ".venv" / "bin" / "python3"
-if venv_python.exists() and sys.executable != str(venv_python):
-    try:
-        import pydantic
-    except ImportError:
-        os.execv(str(venv_python), [str(venv_python)] + sys.argv)
 
 import argparse
 import json
 from typing import Dict, List, Tuple
 
-from src.config import GROUND_TRUTH_DIR, MODEL_NAME, TXT_DIR
-from src.pipeline import Note2TaskPipeline
+from backend.core.config import GROUND_TRUTH_DIR, TXT_DIR, get_settings
+from backend.clients.ollama import OllamaClient
+from backend.services.extraction_service import ExtractionService
+from backend.services.date_service import convert_to_ground_truth_format
 
 
 def normalize_activity_str(text: str) -> set:
@@ -75,7 +68,7 @@ def match_items(pred_items: List[dict], gt_items: List[dict]) -> Tuple[int, int,
     return exact_time_matches, activity_matches, pred_items
 
 
-def evaluate(limit: int = None, model_name: str = MODEL_NAME):
+def evaluate(limit: int = None, model_name: str | None = None):
     txt_files = sorted(TXT_DIR.glob("*.txt"), key=lambda p: int(p.stem) if p.stem.isdigit() else 999)
     eval_files = [f for f in txt_files if f.stem.isdigit()]
 
@@ -86,12 +79,14 @@ def evaluate(limit: int = None, model_name: str = MODEL_NAME):
         print("[!] Brak plików testowych w Data/TXT/.", file=sys.stderr)
         return
 
+    settings = get_settings()
+    model_name = model_name or settings.model_name
     print("=" * 70)
     print(f"      Ewaluacja Note2Task na zbiorze referencyjnym ({len(eval_files)} plików)")
     print(f"      Model: {model_name}")
     print("=" * 70)
 
-    pipeline = Note2TaskPipeline(model_name=model_name)
+    extractor = ExtractionService(OllamaClient(str(settings.ollama_host), model_name, settings.ollama_timeout))
 
     total_gt_items = 0
     total_pred_items = 0
@@ -109,7 +104,7 @@ def evaluate(limit: int = None, model_name: str = MODEL_NAME):
         gt_data = json.loads(gt_path.read_text(encoding="utf-8"))
 
         # Ekstrakcja
-        _, pred_gt, _ = pipeline.process_text(raw_text)
+        pred_gt = convert_to_ground_truth_format(extractor.extract_from_text(raw_text))
 
         file_gt_count = sum(len(items) for items in gt_data.values())
         file_pred_count = sum(len(items) for items in pred_gt.values())
@@ -155,7 +150,7 @@ def evaluate(limit: int = None, model_name: str = MODEL_NAME):
 def main():
     parser = argparse.ArgumentParser(description="Ewaluacja Note2Task na Data/GroundTruth.")
     parser.add_argument("--limit", "-l", type=int, default=None, help="Maksymalna liczba plików do ewaluacji (domyślnie wszystkie)")
-    parser.add_argument("--model", "-m", type=str, default=MODEL_NAME, help="Nazwa modelu")
+    parser.add_argument("--model", "-m", type=str, default=None, help="Nazwa modelu")
     args = parser.parse_args()
 
     evaluate(limit=args.limit, model_name=args.model)

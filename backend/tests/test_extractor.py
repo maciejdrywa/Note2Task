@@ -1,7 +1,14 @@
 """Test integracyjny i jednostkowy ekstraktora z lokalnym modelem Ollama."""
 
 import pytest
-from src.extractor import OllamaNoteExtractor, split_text_into_sentences
+from backend.services.extraction_service import ExtractionService, split_text_into_sentences
+from backend.clients.ollama import OllamaClient
+from backend.core.config import get_settings
+
+
+def make_extractor():
+    settings = get_settings()
+    return ExtractionService(OllamaClient(str(settings.ollama_host), settings.model_name, settings.ollama_timeout))
 
 
 def test_split_sentences():
@@ -26,7 +33,7 @@ def test_split_sentences_exclamation_question_and_newlines():
 
 
 def test_parse_raw_response_handles_list():
-    extractor = OllamaNoteExtractor()
+    extractor = make_extractor()
     # Gdy model zwróci listę zamiast słownika
     raw_list = [
         {"czynnosc": "iść na spacer", "godzina_start": "16:00"}
@@ -38,8 +45,9 @@ def test_parse_raw_response_handles_list():
     assert parsed["zdanie1"][0].godzina_start == "16:00"
 
 
+@pytest.mark.integration
 def test_extractor_user_phrase():
-    extractor = OllamaNoteExtractor()
+    extractor = make_extractor()
     phrase = "ide na studia o 12 na 2 godziny. Potem ide na silownie od 15 do 17"
     results = extractor.extract_from_text(phrase)
 
