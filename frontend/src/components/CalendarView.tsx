@@ -38,8 +38,16 @@ export function CalendarView({ index, day, highlight, onSelectDay, onToggleTask,
   const entries = index.get(day) ?? [];
   const highlightRef = useRef<HTMLLIElement>(null);
 
+  const dayListRef = useRef<HTMLElement>(null);
+
+  // po wybraniu dnia przewiń do jego listy zadań (albo do podświetlonego zadania)
   useEffect(() => {
-    highlightRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const target = highlightRef.current ?? dayListRef.current;
+    if (!target) return;
+    // na szerokim oknie lista jest obok siatki i już widać ją u góry — wtedy nie przewijamy
+    const r = target.getBoundingClientRect();
+    if (r.top >= 0 && r.bottom <= window.innerHeight && r.top < window.innerHeight * 0.5) return;
+    target.scrollIntoView({ block: highlightRef.current ? "center" : "start", behavior: "smooth" });
   }, [highlight, day]);
 
   const goMonth = (delta: number) => {
@@ -130,7 +138,7 @@ export function CalendarView({ index, day, highlight, onSelectDay, onToggleTask,
           </div>
 
           {/* lista wybranego dnia */}
-          <section className="rounded-xl border bg-card p-5 shadow-sm">
+          <section ref={dayListRef} className="scroll-mt-6 rounded-xl border bg-card p-5 shadow-sm">
             <h2 className="mb-3 flex items-baseline gap-2 font-semibold">
               {dayLabel(day)}
               <span className="text-sm font-normal text-muted-foreground">

@@ -193,7 +193,7 @@ export function ChatView(props: Props) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Anuluj</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete} className="bg-destructive text-white hover:bg-destructive/90">
+              <AlertDialogAction variant="destructive" onClick={onDelete}>
                 Usuń
               </AlertDialogAction>
             </AlertDialogFooter>
