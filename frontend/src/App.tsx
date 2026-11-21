@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
-import { API_URL, extractTasks, USE_MOCK } from "@/api";
-import { NoteEditor, type ExtractStatus } from "@/components/NoteEditor";
+import { extractTasks, type Task } from "@/api";
+import { CalendarView, type TaskRef } from "@/components/CalendarView";
+import { ChatView, type ChatTab, type ExtractStatus } from "@/components/ChatView";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { Sidebar } from "@/components/Sidebar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { buildCalendarIndex, taskDay } from "@/lib/dates";
 import { applyTheme } from "@/lib/theme";
 import { focusMainWindow, readClipboardText, registerGlobalShortcut, shortcutsSupported } from "@/platform/shortcut";
 import {
@@ -22,13 +23,18 @@ import {
   type Settings,
 } from "@/storage";
 
+/** Główne okno: czat (z zakładkami Czat / Zadania) albo duży kalendarz. */
+type View =
+  | { kind: "chat"; noteId: string; tab: ChatTab }
+  | { kind: "calendar"; day: string; highlight: TaskRef | null };
+
 const isEmpty = (n: Note) => !n.text.trim() && !n.title.trim();
 const IDLE: ExtractStatus = { state: "idle" };
 
 function App() {
   const [loaded, setLoaded] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [view, setView] = useState<View | null>(null);
   const [query, setQuery] = useState("");
   const [statuses, setStatuses] = useState<Record<string, ExtractStatus>>({});
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -44,7 +50,7 @@ function App() {
       const sorted = [...saved].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       const initial = sorted.length ? sorted : [createNote()];
       setNotes(initial);
-      setSelectedId(initial[0].id);
+      setView({ kind: "chat", noteId: initial[0].id, tab: "chat" });
       setSettings(s);
       setLoaded(true);
     });
@@ -64,19 +70,31 @@ function App() {
     setNotes((prev) => prev.map((n) => (n.id === id ? fn(n) : n)));
   }, []);
 
-  // --- akcje ---
-  const select = useCallback((id: string) => {
-    setNotes((prev) => prev.filter((n) => n.id === id || !isEmpty(n)));
-    setSelectedId(id);
+  /** Zmiana widoku; puste szkice czatów (poza otwieranym) są usuwane. */
+  const navigate = useCallback((next: View) => {
+    const keep = next.kind === "chat" ? next.noteId : null;
+    setNotes((prev) => prev.filter((n) => n.id === keep || !isEmpty(n)));
+    setView(next);
   }, []);
 
-  const addNote = useCallback((text = "") => {
-    const note = createNote(text);
-    setNotes((prev) => [note, ...prev.filter((n) => !isEmpty(n))]);
-    setSelectedId(note.id);
-    setQuery("");
-    return note;
-  }, []);
+  // --- akcje ---
+  const openNote = useCallback((id: string, tab: ChatTab = "chat") => navigate({ kind: "chat", noteId: id, tab }), [navigate]);
+
+  const openDay = useCallback(
+    (day: string, highlight: TaskRef | null = null) => navigate({ kind: "calendar", day, highlight }),
+    [navigate],
+  );
+
+  const addNote = useCallback(
+    (text = "") => {
+      const note = createNote(text);
+      setNotes((prev) => [note, ...prev.filter((n) => !isEmpty(n))]);
+      setView({ kind: "chat", noteId: note.id, tab: "chat" });
+      setQuery("");
+      return note;
+    },
+    [],
+  );
 
   const extract = useCallback(
     async (id: string, textOverride?: string) => {
@@ -94,10 +112,14 @@ function App() {
           ...n,
           result: carryOverDone(n.result, result),
           extractedText: text,
-          taskOrder: null, // nowe zadania = nowe id, więc wracamy do sortowania po godzinie
+          taskOrder: null, // nowe zadania = nowe id, więc wracamy do sortowania po czasie
           updatedAt: new Date().toISOString(),
         }));
         setStatuses((s) => ({ ...s, [id]: IDLE }));
+        // po analizie: zakładka z zadaniami (jeśli użytkownik nadal jest w tym czacie)
+        if (result.tasks.length > 0) {
+          setView((v) => (v?.kind === "chat" && v.noteId === id ? { ...v, tab: "tasks" } : v));
+        }
       } catch (e) {
         if (ctrl.signal.aborted) return;
         setStatuses((s) => ({ ...s, [id]: { state: "error", message: e instanceof Error ? e.message : String(e) } }));
@@ -110,29 +132,26 @@ function App() {
 
   const deleteNote = useCallback((id: string) => {
     aborts.current.get(id)?.abort();
-    const rest = notesRef.current.filter((n) => n.id !== id);
+    const rest = notesRef.current.filter((n) => n.id !== id && !isEmpty(n));
     const next = rest.length ? rest : [createNote()];
     setNotes(next);
-    setSelectedId(next[0].id);
+    setView({ kind: "chat", noteId: next[0].id, tab: "chat" });
   }, []);
 
   const toggleTask = useCallback(
-    (noteId: string, taskId: string) => {
+    ({ noteId, taskId }: TaskRef) => {
       updateNote(noteId, (n) =>
         n.result
-          ? {
-              ...n,
-              result: {
-                sentences: n.result.sentences.map((s) => ({
-                  ...s,
-                  tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)),
-                })),
-              },
-            }
+          ? { ...n, result: { tasks: n.result.tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)) } }
           : n,
       );
     },
     [updateNote],
+  );
+
+  const openTaskInCalendar = useCallback(
+    (note: Note, task: Task) => openDay(taskDay(task, note), { noteId: note.id, taskId: task.id }),
+    [openDay],
   );
 
   const changeSettings = useCallback((s: Settings) => {
@@ -173,57 +192,74 @@ function App() {
     };
   }, [settings.shortcut, loaded]);
 
-  const selected = notes.find((n) => n.id === selectedId) ?? null;
+  // --- kalendarz: zadania ze wszystkich czatów po dniach ---
+  const calendarIndex = useMemo(() => buildCalendarIndex(notes), [notes]);
+  const busyDays = useMemo(() => new Set(calendarIndex.keys()), [calendarIndex]);
+
+  const activeNote = view?.kind === "chat" ? (notes.find((n) => n.id === view.noteId) ?? null) : null;
 
   return (
     <TooltipProvider>
       <div className="grid h-full grid-cols-[280px_minmax(0,1fr)]">
         <Sidebar
           notes={notes}
-          selectedId={selectedId}
+          activeNoteId={activeNote?.id ?? null}
+          calendarDay={view?.kind === "calendar" ? view.day : null}
+          busyDays={busyDays}
           query={query}
           onQuery={setQuery}
-          onSelect={select}
+          onSelectNote={(id) => openNote(id)}
+          onSelectDay={(day) => openDay(day)}
           onNew={() => addNote()}
         />
 
-        <main className="overflow-y-auto bg-muted/30 px-7 pt-6 pb-24">
-          {selected && (
-            <NoteEditor
-              key={selected.id}
-              note={selected}
-              status={statuses[selected.id] ?? IDLE}
-              onChange={(patch) => updateNote(selected.id, (n) => ({ ...n, ...patch, updatedAt: new Date().toISOString() }))}
-              onExtract={() => extract(selected.id)}
-              onDelete={() => deleteNote(selected.id)}
-              onToggleTask={(taskId) => toggleTask(selected.id, taskId)}
-              onReorder={(order) => updateNote(selected.id, (n) => ({ ...n, taskOrder: order }))}
+        <main className="min-h-0 overflow-hidden bg-muted/30">
+          {view?.kind === "chat" && activeNote && (
+            <ChatView
+              key={activeNote.id}
+              note={activeNote}
+              status={statuses[activeNote.id] ?? IDLE}
+              tab={view.tab}
+              onTab={(tab) => setView({ ...view, tab })}
+              onChange={(patch) =>
+                updateNote(activeNote.id, (n) => ({ ...n, ...patch, updatedAt: new Date().toISOString() }))
+              }
+              onAnalyze={() => extract(activeNote.id)}
+              onDelete={() => deleteNote(activeNote.id)}
+              onNew={() => addNote()}
+              onToggleTask={(taskId) => toggleTask({ noteId: activeNote.id, taskId })}
+              onReorder={(order) => updateNote(activeNote.id, (n) => ({ ...n, taskOrder: order }))}
+              onOpenTask={(task) => openTaskInCalendar(activeNote, task)}
+            />
+          )}
+          {view?.kind === "calendar" && (
+            <CalendarView
+              index={calendarIndex}
+              day={view.day}
+              highlight={view.highlight}
+              onSelectDay={(day) => openDay(day)}
+              onToggleTask={toggleTask}
+              onOpenNote={(id) => openNote(id, "tasks")}
             />
           )}
         </main>
       </div>
 
-      <div className="fixed right-5 bottom-5 flex items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant="secondary" className="uppercase">
-              {USE_MOCK ? "mock" : "API"}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>{USE_MOCK ? "Dane z ../Data (VITE_USE_MOCK=true)" : API_URL}</TooltipContent>
-        </Tooltip>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="rounded-full shadow-md" aria-label="Ustawienia">
-              <SettingsIcon />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="top" align="end" className="w-96">
-            <SettingsPanel settings={settings} shortcutError={shortcutError} onChange={changeSettings} />
-          </PopoverContent>
-        </Popover>
-      </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="fixed right-5 bottom-5 rounded-full shadow-md"
+            aria-label="Ustawienia"
+          >
+            <SettingsIcon />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="top" align="end" className="w-96">
+          <SettingsPanel settings={settings} shortcutError={shortcutError} onChange={changeSettings} />
+        </PopoverContent>
+      </Popover>
     </TooltipProvider>
   );
 }

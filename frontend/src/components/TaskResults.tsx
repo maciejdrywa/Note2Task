@@ -1,58 +1,107 @@
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
-import { ArrowDownUp, GripVertical } from "lucide-react";
-import { sortByTime, type NoteResult, type Task } from "@/api";
+import { ArrowDownUp, CalendarDays, GripVertical } from "lucide-react";
+import { type Task } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { dayLabel, shortDay, timeRange } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  result: NoteResult;
+  tasks: Task[];
+  /** Dzień dla zadań bez daty (dzień utworzenia czatu). */
+  fallbackDay: string;
   order: string[] | null;
   onToggle: (taskId: string) => void;
   onReorder: (order: string[] | null) => void;
+  /** Kliknięcie zadania — otwiera je w kalendarzu. */
+  onOpen: (task: Task) => void;
 }
 
-function Time({ task }: { task: Task }) {
+const dayOf = (t: Task, fallback: string) => t.date ?? fallback;
+
+function sortTasks(tasks: Task[], fallback: string): Task[] {
+  const key = (t: Task) => `${dayOf(t, fallback)} ${t.start ?? "00:00"}`;
+  return [...tasks].sort((a, b) => key(a).localeCompare(key(b)));
+}
+
+function TimeLabel({ task, day }: { task: Task; day?: string }) {
   return (
     <span
       className={cn(
-        "shrink-0 tabular-nums",
-        task.time ? "font-semibold text-foreground" : "text-muted-foreground",
+        "w-[6.5rem] shrink-0 text-sm tabular-nums",
+        task.start ? "font-semibold text-foreground" : "text-muted-foreground",
         task.done && "text-muted-foreground line-through",
       )}
     >
-      {task.time ?? "--:--"}
+      {day && <span className="mr-1.5 font-normal text-muted-foreground">{shortDay(day)}</span>}
+      {timeRange(task)}
     </span>
   );
 }
 
-function Action({ task }: { task: Task }) {
+function TaskText({ task }: { task: Task }) {
   return (
-    <span className={cn("min-w-0 break-words", task.done && "text-muted-foreground line-through")}>{task.action}</span>
+    <span className="flex min-w-0 flex-1 flex-col">
+      <span className={cn("break-words", task.done && "text-muted-foreground line-through")}>{task.action}</span>
+      {task.description && <span className="text-xs break-words text-muted-foreground">{task.description}</span>}
+    </span>
   );
 }
 
-function TaskItem({ task, onToggle }: { task: Task; onToggle: (id: string) => void }) {
+const rowClass = "group flex items-center gap-3 rounded-md bg-muted/60 text-sm transition-colors hover:bg-muted";
+
+function OpenHint() {
   return (
-    <li>
-      <label className="flex cursor-pointer items-center gap-3 rounded-md bg-muted/60 px-3 py-2 text-sm transition-colors hover:bg-muted">
-        <Checkbox checked={task.done} onCheckedChange={() => onToggle(task.id)} />
-        <Time task={task} />
-        <Action task={task} />
-      </label>
-    </li>
+    <CalendarDays className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
   );
 }
 
-/** Zadania wg zapisanej kolejności; nowe / nieznane id na końcu (po godzinie). */
-function orderTasks(tasks: Task[], order: string[] | null): Task[] {
-  if (!order) return sortByTime(tasks);
-  const byId = new Map(tasks.map((t) => [t.id, t]));
-  const ordered = order.map((id) => byId.get(id)).filter((t): t is Task => !!t);
-  const rest = sortByTime(tasks.filter((t) => !order.includes(t.id)));
-  return [...ordered, ...rest];
+// --- „Po dniach”: checkboxy, klik w zadanie = kalendarz ---
+
+function ByDay({ tasks, fallbackDay, onToggle, onOpen }: Omit<Props, "order" | "onReorder">) {
+  const groups = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const t of sortTasks(tasks, fallbackDay)) {
+      const day = dayOf(t, fallbackDay);
+      map.set(day, [...(map.get(day) ?? []), t]);
+    }
+    return [...map.entries()];
+  }, [tasks, fallbackDay]);
+
+  return (
+    <div className="divide-y">
+      {groups.map(([day, list]) => (
+        <section key={day} className="py-3 first:pt-1 last:pb-0">
+          <h3 className="mb-2 text-xs font-medium text-muted-foreground">{dayLabel(day)}</h3>
+          <ul className="flex flex-col gap-1.5">
+            {list.map((t) => (
+              <li key={t.id} className={cn(rowClass, "pl-3")}>
+                <Checkbox
+                  checked={t.done}
+                  onCheckedChange={() => onToggle(t.id)}
+                  aria-label={`Zrobione: ${t.action}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => onOpen(t)}
+                  className="flex min-w-0 flex-1 items-center gap-3 py-2 pr-3 text-left"
+                  title="Pokaż w kalendarzu"
+                >
+                  <TimeLabel task={t} />
+                  <TaskText task={t} />
+                  <OpenHint />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
 }
+
+// --- „Oś czasu”: bez checkboxów, przeciąganie ---
 
 const sameOrder = (a: string[], b: string[]) => a.length === b.length && a.every((id, i) => id === b[i]);
 
@@ -62,14 +111,19 @@ function move(ids: string[], id: string, toIndex: number): string[] {
   return rest;
 }
 
-/** Oś czasu: bez checkboxów, kolejność zmieniana przeciąganiem (uchwyt) lub strzałkami ↑/↓. */
-function Timeline({ tasks, order, onReorder }: { tasks: Task[]; order: string[] | null; onReorder: Props["onReorder"] }) {
-  const baseIds = useMemo(() => orderTasks(tasks, order).map((t) => t.id), [tasks, order]);
+function Timeline({ tasks, fallbackDay, order, onReorder, onOpen }: Omit<Props, "onToggle">) {
+  const baseIds = useMemo(() => {
+    const sorted = sortTasks(tasks, fallbackDay);
+    if (!order) return sorted.map((t) => t.id);
+    const known = order.filter((id) => tasks.some((t) => t.id === id));
+    return [...known, ...sorted.filter((t) => !known.includes(t.id)).map((t) => t.id)];
+  }, [tasks, fallbackDay, order]);
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
   const [draft, setDraft] = useState<string[] | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
   const ids = draft ?? baseIds;
+  const multiDay = new Set(tasks.map((t) => dayOf(t, fallbackDay))).size > 1;
 
   const commit = (next: string[]) => {
     if (!sameOrder(next, baseIds)) onReorder(next);
@@ -85,7 +139,6 @@ function Timeline({ tasks, order, onReorder }: { tasks: Task[]; order: string[] 
 
   const onPointerMove = (e: PointerEvent<HTMLButtonElement>) => {
     if (!dragId || !draft) return;
-    // nowa pozycja = liczba pozostałych elementów, których środek jest nad kursorem
     const others = draft.filter((id) => id !== dragId);
     const index = others.filter((id) => {
       const r = itemRefs.current.get(id)?.getBoundingClientRect();
@@ -114,7 +167,7 @@ function Timeline({ tasks, order, onReorder }: { tasks: Task[]; order: string[] 
         <span className="text-xs text-muted-foreground">Przeciągnij za uchwyt, żeby zmienić kolejność</span>
         {order && (
           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onReorder(null)}>
-            <ArrowDownUp /> Sortuj po godzinie
+            <ArrowDownUp /> Sortuj po czasie
           </Button>
         )}
       </div>
@@ -130,10 +183,7 @@ function Timeline({ tasks, order, onReorder }: { tasks: Task[]; order: string[] 
                 if (el) itemRefs.current.set(id, el);
                 else itemRefs.current.delete(id);
               }}
-              className={cn(
-                "flex items-center gap-3 rounded-md border border-transparent bg-muted/60 py-1.5 pr-3 pl-1 text-sm",
-                dragging && "border-ring bg-accent shadow-md",
-              )}
+              className={cn(rowClass, "border border-transparent pl-1", dragging && "border-ring bg-accent shadow-md")}
             >
               <button
                 type="button"
@@ -151,8 +201,16 @@ function Timeline({ tasks, order, onReorder }: { tasks: Task[]; order: string[] 
               >
                 <GripVertical className="size-4" />
               </button>
-              <Time task={t} />
-              <Action task={t} />
+              <button
+                type="button"
+                onClick={() => onOpen(t)}
+                className="flex min-w-0 flex-1 items-center gap-3 py-1.5 pr-3 text-left"
+                title="Pokaż w kalendarzu"
+              >
+                <TimeLabel task={t} day={multiDay ? dayOf(t, fallbackDay) : undefined} />
+                <TaskText task={t} />
+                <OpenHint />
+              </button>
             </li>
           );
         })}
@@ -161,47 +219,40 @@ function Timeline({ tasks, order, onReorder }: { tasks: Task[]; order: string[] 
   );
 }
 
-export function TaskResults({ result, order, onToggle, onReorder }: Props) {
-  const all = result.sentences.flatMap((s) => s.tasks);
-  const done = all.filter((t) => t.done).length;
+export function TaskResults(props: Props) {
+  const [view, setView] = useState<"days" | "timeline">("days");
+  const { tasks } = props;
+  const done = tasks.filter((t) => t.done).length;
 
-  if (all.length === 0) {
+  if (tasks.length === 0) {
     return <p className="text-sm text-muted-foreground">Nie znaleziono żadnych zadań w tej notatce.</p>;
   }
 
   return (
-    <Tabs defaultValue="sentences">
-      <div className="mb-2 flex items-center justify-between gap-3">
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-          Zadania{" "}
-          <span className={cn("ml-1 tabular-nums", done === all.length ? "text-success" : "text-foreground")}>
-            {done}/{all.length}
+          Zrobione{" "}
+          <span className={cn("ml-1 tabular-nums", done === tasks.length ? "text-success" : "text-foreground")}>
+            {done}/{tasks.length}
           </span>
         </h2>
-        <TabsList>
-          <TabsTrigger value="sentences">Po zdaniach</TabsTrigger>
-          <TabsTrigger value="timeline">Oś czasu</TabsTrigger>
-        </TabsList>
+        <ToggleGroup
+          type="single"
+          size="sm"
+          variant="outline"
+          value={view}
+          onValueChange={(v) => v && setView(v as typeof view)}
+        >
+          <ToggleGroupItem value="days" className="px-3 text-xs">
+            Po dniach
+          </ToggleGroupItem>
+          <ToggleGroupItem value="timeline" className="px-3 text-xs">
+            Oś czasu
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
-
-      <TabsContent value="sentences" className="divide-y">
-        {result.sentences
-          .filter((s) => s.tasks.length > 0)
-          .map((s) => (
-            <section key={s.id} className="py-3 first:pt-1 last:pb-0">
-              <p className="mb-2 text-xs text-muted-foreground">{s.text}</p>
-              <ul className="flex flex-col gap-1.5">
-                {s.tasks.map((t) => (
-                  <TaskItem key={t.id} task={t} onToggle={onToggle} />
-                ))}
-              </ul>
-            </section>
-          ))}
-      </TabsContent>
-
-      <TabsContent value="timeline">
-        <Timeline tasks={all} order={order} onReorder={onReorder} />
-      </TabsContent>
-    </Tabs>
+      {view === "days" ? <ByDay {...props} /> : <Timeline {...props} />}
+    </div>
   );
 }

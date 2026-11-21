@@ -1,62 +1,46 @@
-import type { ApiRequest, ApiResponse, NoteResult, Task } from "./types";
-
-// Ten sam podział co Data/txt_to_json.py: kropka między cyframi
-// lub po "godz." należy do zapisu godziny, a nie kończy zdania.
-const SENTENCE_END = /(?<!\bgodz)(?:(?<!\d)\.|\.(?!\d))+/i;
-
-export function splitSentences(note: string): string[] {
-  return note
-    .split(SENTENCE_END)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
+import type { ApiEventTime, ApiRequest, ApiResponse, NoteResult, Task } from "./types";
 
 export function toApiRequest(note: string): ApiRequest {
-  const req: ApiRequest = {};
-  splitSentences(note).forEach((s, i) => {
-    req[`zdanie${i + 1}`] = s;
-  });
-  return req;
+  return { tekst: note.trim() };
 }
 
-/** "8:5", "08.05", "8:05" -> "08:05"; nieprawidłowe -> null. */
-export function normalizeTime(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  const m = /^(\d{1,2})[:.](\d{1,2})$/.exec(raw.trim());
-  if (!m) return null;
-  const h = Number(m[1]);
-  const min = Number(m[2]);
-  if (h > 23 || min > 59) return null;
-  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+/**
+ * Data i godzina dokładnie tak, jak zapisał je backend (bez przeliczania na strefę komputera):
+ * "2026-11-22T10:00:00+01:00" -> { date: "2026-11-22", time: "10:00" }.
+ */
+export function parseEventTime(t: ApiEventTime | null | undefined): { date: string | null; time: string | null } {
+  if (!t) return { date: null, time: null };
+  if (t.dateTime) {
+    const m = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})/.exec(t.dateTime);
+    if (m) return { date: m[1], time: `${m[2]}:${m[3]}` };
+  }
+  if (t.date && /^\d{4}-\d{2}-\d{2}$/.test(t.date)) return { date: t.date, time: null };
+  return { date: null, time: null };
 }
 
-/** Zadania bez godziny lądują na końcu. */
-export function sortByTime(tasks: Task[]): Task[] {
-  return [...tasks].sort((a, b) => {
-    if (a.time === b.time) return 0;
-    if (a.time === null) return 1;
-    if (b.time === null) return -1;
-    return a.time.localeCompare(b.time);
-  });
+/** Po dacie, potem po godzinie; brak daty / godziny na końcu. */
+export function sortTasks(tasks: Task[]): Task[] {
+  const key = (t: Task) => `${t.date ?? "9999-99-99"} ${t.start ?? "99:99"}`;
+  return [...tasks].sort((a, b) => key(a).localeCompare(key(b)));
 }
 
-const sentenceIndex = (key: string) => Number(key.replace(/\D/g, "")) || 0;
-
-export function fromApiResponse(req: ApiRequest, res: ApiResponse): NoteResult {
-  const keys = new Set([...Object.keys(req), ...Object.keys(res)]);
-  const sentences = [...keys]
-    .sort((a, b) => sentenceIndex(a) - sentenceIndex(b))
-    .map((id) => ({
-      id,
-      text: req[id] ?? "",
-      tasks: sortByTime(
-        (res[id] ?? []).map((t, i) => ({
-          id: `${id}-${i}`,
-          action: t["czynność"],
-          time: normalizeTime(t.godzina),
-          done: false,
-        })),
-      ),
-    }));
-  return { sentences };
+export function fromApiResponse(res: ApiResponse): NoteResult {
+  if (!Array.isArray(res)) return { tasks: [] };
+  const tasks = res
+    .filter((e) => e && typeof e.summary === "string" && e.summary.trim())
+    .map((e, i): Task => {
+      const start = parseEventTime(e.start);
+      const end = parseEventTime(e.end);
+      return {
+        id: `t${i}`,
+        action: e.summary.trim(),
+        description: e.description?.trim() || null,
+        date: start.date ?? end.date,
+        start: start.time,
+        // koniec pokazujemy tylko, gdy jest tego samego dnia co start
+        end: end.time && (!end.date || end.date === start.date) ? end.time : null,
+        done: false,
+      };
+    });
+  return { tasks: sortTasks(tasks) };
 }

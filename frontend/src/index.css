@@ -108,6 +108,30 @@
   --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
 }
 
+/* „Myślę…” — przesuwający się połysk tekstu */
+.thinking-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: thinking-shimmer 1.6s linear infinite;
+}
+
+@keyframes thinking-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

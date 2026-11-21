@@ -1,5 +1,33 @@
-import type { NoteResult } from "../api";
+import type { NoteResult, Task } from "../api";
 import { getItem, setItem } from "./kv";
+
+/** Stary format (przed kontraktem z backendem): zadania pogrupowane po zdaniach, sama godzina. */
+interface LegacyResult {
+  sentences: { tasks: { id: string; action: string; time: string | null; done: boolean }[] }[];
+}
+
+/** Przerabia zapisane wyniki w starym formacie na NoteResult (zachowuje odhaczenia i kolejność). */
+function migrateResult(result: unknown): NoteResult | null {
+  if (!result || typeof result !== "object") return null;
+  if (Array.isArray((result as NoteResult).tasks)) return result as NoteResult;
+  const legacy = result as LegacyResult;
+  if (!Array.isArray(legacy.sentences)) return null;
+  return {
+    tasks: legacy.sentences.flatMap((s) =>
+      s.tasks.map(
+        (t): Task => ({
+          id: t.id,
+          action: t.action,
+          description: null,
+          date: null,
+          start: t.time,
+          end: null,
+          done: t.done,
+        }),
+      ),
+    ),
+  };
+}
 
 export interface Note {
   id: string;
@@ -17,7 +45,8 @@ const KEY = "notes";
 
 export async function loadNotes(): Promise<Note[]> {
   const notes = await getItem<Note[]>(KEY);
-  return Array.isArray(notes) ? notes : [];
+  if (!Array.isArray(notes)) return [];
+  return notes.map((n) => ({ ...n, result: migrateResult(n.result) }));
 }
 
 export function saveNotes(notes: Note[]): Promise<void> {
@@ -56,28 +85,17 @@ export function isStale(note: Note): boolean {
 }
 
 export function taskStats(note: Note): { done: number; total: number } {
-  const tasks = note.result?.sentences.flatMap((s) => s.tasks) ?? [];
+  const tasks = note.result?.tasks ?? [];
   return { done: tasks.filter((t) => t.done).length, total: tasks.length };
 }
+
+const taskKey = (t: Task) => `${t.action.toLocaleLowerCase("pl")}|${t.date}|${t.start}`;
 
 /** Po ponownym wyciągnięciu zachowuje odhaczenie zadań, które się nie zmieniły. */
 export function carryOverDone(prev: NoteResult | null, next: NoteResult): NoteResult {
   if (!prev) return next;
-  const doneKeys = new Set(
-    prev.sentences
-      .flatMap((s) => s.tasks)
-      .filter((t) => t.done)
-      .map((t) => `${t.action.toLocaleLowerCase("pl")}|${t.time}`),
-  );
-  return {
-    sentences: next.sentences.map((s) => ({
-      ...s,
-      tasks: s.tasks.map((t) => ({
-        ...t,
-        done: doneKeys.has(`${t.action.toLocaleLowerCase("pl")}|${t.time}`),
-      })),
-    })),
-  };
+  const doneKeys = new Set(prev.tasks.filter((t) => t.done).map(taskKey));
+  return { tasks: next.tasks.map((t) => ({ ...t, done: doneKeys.has(taskKey(t)) })) };
 }
 
 export function formatDate(iso: string): string {

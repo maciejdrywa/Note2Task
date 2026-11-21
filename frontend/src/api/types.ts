@@ -1,35 +1,43 @@
-// Kontrakt z backendem (na razie wg Data/JSON i Data/GroundTruth).
+// Kontrakt z backendem (ustalony z backendem 21.11.2026).
 // Zmiana formatu API = zmiana tylko w tym folderze.
+//
+//   POST {VITE_API_URL}/extract
+//   body:     { "tekst": "cała notatka" }
+//   response: ApiEvent[]  (format jak wydarzenia Google Calendar)
 
-/** Żądanie: notatka pocięta na zdania, jak w Data/JSON/*.json. */
-export type ApiRequest = Record<string, string>; // { "zdanie1": "tekst", ... }
-
-/** Pojedyncze zadanie w odpowiedzi, jak w Data/GroundTruth/*.json. */
-export interface ApiTask {
-  "czynność": string;
-  godzina: string | null; // "HH:MM" albo null
+export interface ApiRequest {
+  tekst: string;
 }
 
-/** Odpowiedź: zadania pogrupowane po kluczu zdania. */
-export type ApiResponse = Record<string, ApiTask[]>;
+export interface ApiEventTime {
+  dateTime?: string | null; // "2026-11-22T10:00:00+01:00"
+  date?: string | null; // "2026-11-22" — wydarzenie całodniowe / bez godziny
+  timeZone?: string | null; // "Europe/Warsaw"
+}
+
+export interface ApiEvent {
+  summary: string;
+  description: string | null;
+  start: ApiEventTime | null;
+  end: ApiEventTime | null;
+}
+
+export type ApiResponse = ApiEvent[];
 
 // --- Model używany w UI (niezależny od nazw pól z API) ---
 
 export interface Task {
-  id: string; // stabilny w obrębie notatki, np. "zdanie1-0"
+  id: string; // stabilny w obrębie notatki
   action: string;
-  time: string | null; // "HH:MM"
+  description: string | null;
+  date: string | null; // "YYYY-MM-DD"
+  start: string | null; // "HH:MM"
+  end: string | null; // "HH:MM"
   done: boolean; // stan lokalny (checkbox), backend go nie zna
 }
 
-export interface SentenceResult {
-  id: string; // "zdanie1"
-  text: string; // treść zdania z notatki
-  tasks: Task[];
-}
-
 export interface NoteResult {
-  sentences: SentenceResult[];
+  tasks: Task[];
 }
 
 export class ApiError extends Error {

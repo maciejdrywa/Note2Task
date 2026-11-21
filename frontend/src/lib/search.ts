@@ -1,5 +1,5 @@
 // Wyszukiwanie notatek.
-//   zwykły tekst      -> tytuł, treść, czynności z zadań (wszystkie słowa muszą pasować)
+//   zwykły tekst      -> tytuł, treść, nazwy i opisy zadań (wszystkie słowa muszą pasować)
 //   &DD/MM/RRRR       -> data utworzenia
 //   &DD/MM            -> dzień i miesiąc (dowolny rok)
 //   &MM/RRRR          -> cały miesiąc
@@ -73,9 +73,11 @@ export function matchesNote(note: Note, q: ParsedQuery): boolean {
   if (!q.dates.every((f) => matchesDate(note.createdAt, f))) return false;
   if (q.words.length === 0) return true;
   const haystack = norm(
-    [displayTitle(note), note.text, ...(note.result?.sentences.flatMap((s) => s.tasks.map((t) => t.action)) ?? [])].join(
-      "\n",
-    ),
+    [
+      displayTitle(note),
+      note.text,
+      ...(note.result?.tasks.flatMap((t) => [t.action, t.description ?? ""]) ?? []),
+    ].join("\n"),
   );
   return q.words.every((w) => haystack.includes(w));
 }
