@@ -17,3 +17,14 @@ npm run build       # sprawdzenie TS + build
 - `VITE_USE_MOCK=true` — zamiast backendu używa mocka z danych w `../Data`
 
 Kontrakt API (typy, klient, mock) jest w `src/api/`.
+
+## Google Calendar
+
+W trybie `VITE_USE_MOCK=false` frontend wysyła `POST /schedule` z polem `text`.
+Backend analizuje notatkę i zapisuje wydarzenia w Google Calendar. Odpowiedź zawiera
+raport zapisu; częściowe błędy i niepewne wyniki są pokazywane nad zadaniami.
+Autoryzację Google wykonaj wcześniej: `python -m backend.tools.authorize_google`
+z głównego katalogu projektu. Ponowne wysłanie notatki może utworzyć duplikaty.
+Tryb mock nie zapisuje wydarzeń w Google. Po zmianie `.env` uruchom frontend ponownie.
+
+Test kontraktu API: `npm run test:api`.
