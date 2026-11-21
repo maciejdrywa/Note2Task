@@ -1,25 +1,25 @@
-# Note2Task - Inteligentny Kalendarz
+# Note2Task - Intelligent Calendar
 
-Projekt modułu NLP/LLM przekształcający nieustrukturyzowane notatki tekstowe w języku polskim na ustrukturyzowane wydarzenia kalendarzowe (Google Calendar API) oraz format ewaluacyjny.
+An NLP/LLM module that converts unstructured Polish text notes into structured calendar events (Google Calendar API) and an evaluation format.
 
-Model bazowy: **`qwen2.5:3b`** (3.1B parametrów) działający lokalnie z akceleracją GPU (RTX 4050) za pośrednictwem **Ollama** (natywnie lub w Dockerze).
+Base model: **`qwen2.5:3b`** (3.1B parameters), running locally with GPU acceleration (RTX 4050) through **Ollama** (natively or in Docker).
 
 ---
 
-## Szybki Start z Dockerem
+## Quick Start with Docker
 
-### 1. Uruchomienie serwera Ollama w kontenerze:
+### 1. Start the Ollama server in a container:
 ```bash
 docker compose up -d
 ```
-*(Kontener automatycznie montuje pobrane modele z hosta bez konieczności ponownego ich pobierania).*
+*(The container automatically mounts models downloaded on the host, so they do not need to be downloaded again.)*
 
-Jeśli uruchamiasz projekt na nowym komputerze bez wcześniej pobranego modelu:
+If you are running the project on a new computer without the model already downloaded:
 ```bash
 docker exec -it note2task-ollama ollama pull qwen2.5:3b
 ```
 
-### 2. Instalacja zależności Pythona:
+### 2. Install Python dependencies:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -28,35 +28,36 @@ pip install -r requirements.txt
 
 ---
 
-## Użycie CLI
+## CLI Usage
 
-### Przetworzenie notatki z pliku:
+### Process a note from a file:
 ```bash
 python3 run.py --input Data/TXT/test.txt
 ```
-Skrypt wygeneruje dwa pliki wyjściowe:
-- `events_gcal.json` – format gotowy do bezpośredniego wstrzyknięcia do Google Calendar API (`summary`, `start`, `end`, `description`).
-- `events_gt.json` – format kompatybilny ze zbiorem referencyjnym zespołu (`Data/GroundTruth/`).
+The script generates two output files:
 
-### Przetworzenie tekstu podanego wprost:
+- `events_gcal.json` – a format ready to send directly to the Google Calendar API (`summary`, `start`, `end`, `description`).
+- `events_gt.json` – a format compatible with the team's reference dataset (`Data/GroundTruth/`).
+
+### Process text provided directly:
 ```bash
 python3 run.py --text "W piątek o 15:00 spotkanie z promotorem przez 45 minut, potem od 17 do 18:30 siłownia"
 ```
 
 ---
 
-## Testy i Ewaluacja
+## Testing and Evaluation
 
-### Uruchomienie testów jednostkowych:
+### Run unit tests:
 ```bash
 pytest tests/ -v
 ```
 
-### Uruchomienie benchmarku na zbiorze referencyjnym (30 plików):
+### Run the benchmark on the reference dataset (30 files):
 ```bash
 python3 evaluate.py
 ```
-Możesz ograniczyć liczbę plików do pierwszych 5:
+You can limit the evaluation to the first 5 files:
 ```bash
 python3 evaluate.py --limit 5
 ```
