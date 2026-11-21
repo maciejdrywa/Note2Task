@@ -29,6 +29,8 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     env_file: .env
+    volumes:
+      - ./secrets:/app/secrets
     ports:
       - "127.0.0.1:${NOTE2TASK_API_PORT:-8000}:8000"
     depends_on:
