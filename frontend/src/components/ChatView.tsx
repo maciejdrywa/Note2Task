@@ -239,7 +239,8 @@ export function ChatView(props: Props) {
         </div>
 
         {/* kompozytor */}
-        <div className="border-t bg-background px-6 py-4">
+        {/* pr-16: miejsce na przycisk ustawień w prawym dolnym rogu */}
+        <div className="border-t bg-background py-4 pr-16 pl-6">
           <div className="mx-auto w-full max-w-2xl">
             {showComposer ? (
               <div className="rounded-2xl border bg-card p-2 shadow-sm focus-within:ring-2 focus-within:ring-ring/40">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Monitor, Moon, PanelBottom, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
@@ -110,6 +110,16 @@ export function SettingsPanel({ settings, shortcutError, onChange }: Props) {
         {!shortcutsSupported && (
           <p className="text-xs text-muted-foreground">Skrót działa tylko w aplikacji desktopowej (npm run tauri dev).</p>
         )}
+      </section>
+
+      <Separator />
+
+      <section className="flex gap-2 text-xs text-muted-foreground">
+        <PanelBottom className="mt-0.5 size-4 shrink-0" />
+        <p>
+          Zamknięcie okna (✕) chowa Note2Task do zasobnika obok zegara — aplikacja i skrót działają dalej. Okno
+          przywrócisz klikając ikonę, a całkowicie zamkniesz przez jej menu → <strong>Zakończ</strong>.
+        </p>
       </section>
     </div>
   );
