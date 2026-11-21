@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from backend.controllers import extraction, health
+from backend.controllers import extraction, health, scheduling
 from backend.core.config import get_settings
 from backend.core.error_handlers import register_error_handlers
 
@@ -13,6 +13,7 @@ def create_app() -> FastAPI:
     register_error_handlers(app)
     app.include_router(extraction.router)
     app.include_router(health.router)
+    app.include_router(scheduling.router)
     return app
 
 

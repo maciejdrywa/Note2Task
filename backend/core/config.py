@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     default_duration_minutes: int = Field(60, gt=0, validation_alias="DEFAULT_DURATION_MINUTES")
     api_port: int = Field(8000, ge=1, le=65535, validation_alias="NOTE2TASK_API_PORT")
     api_url: AnyHttpUrl | None = Field(None, validation_alias="NOTE2TASK_API_URL")
+    google_calendar_id: str = Field("primary", min_length=1, validation_alias="GOOGLE_CALENDAR_ID")
+    google_oauth_client_file: Path = Field(Path("secrets/google_client.json"), validation_alias="GOOGLE_OAUTH_CLIENT_FILE")
+    google_token_file: Path = Field(Path("secrets/google_token.json"), validation_alias="GOOGLE_TOKEN_FILE")
+    google_calendar_timeout: float = Field(15, gt=0, validation_alias="GOOGLE_CALENDAR_TIMEOUT")
+
+    @field_validator("google_oauth_client_file", "google_token_file", mode="after")
+    @classmethod
+    def resolve_google_path(cls, value: Path) -> Path:
+        return value if value.is_absolute() else PROJECT_ROOT / value
 
     @field_validator("default_timezone")
     @classmethod

@@ -16,6 +16,7 @@ def main(argv: list[str] | None = None) -> int:
     source.add_argument("--text", "-t", help="Treść notatki")
     source.add_argument("--input", "-i", type=Path, help="Plik UTF-8 z notatką")
     parser.add_argument("--url", default=None, help="Adres API")
+    parser.add_argument("--schedule", action="store_true", help="Analizuj i zapisz wydarzenia w Google Calendar")
     args = parser.parse_args(argv)
 
     try:
@@ -33,17 +34,21 @@ def main(argv: list[str] | None = None) -> int:
         if not text.strip():
             raise ValueError("Notatka nie może być pusta.")
 
+        endpoint = "schedule" if args.schedule else "extract"
         request = urllib.request.Request(
-            f"{api_url.rstrip('/')}/extract",
+            f"{api_url.rstrip('/')}/{endpoint}",
             data=json.dumps({"text": text.strip()}, ensure_ascii=False).encode("utf-8"),
             headers={"Content-Type": "application/json"},
         )
         with urllib.request.urlopen(request, timeout=200) as response:
             result = json.load(response)
-        if not isinstance(result, list):
+        if args.schedule:
+            if not isinstance(result, dict) or "results" not in result or result.get("status") not in {"completed", "partial", "failed"}:
+                raise ValueError("API nie zwróciło raportu zapisu wydarzeń.")
+        elif not isinstance(result, list):
             raise ValueError("API nie zwróciło listy wydarzeń.")
         print(json.dumps(result, ensure_ascii=False, indent=2))
-        return 0
+        return 0 if not args.schedule or result["status"] == "completed" else 1
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
         print(f"Błąd API HTTP {exc.code}: {body}", file=sys.stderr)

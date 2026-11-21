@@ -13,3 +13,4 @@ evaluation_results.json
 
 .env
 .env.*
+secrets/
