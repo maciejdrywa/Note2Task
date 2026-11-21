@@ -129,7 +129,7 @@ function App() {
         }
       } catch (e) {
         if (timedOut) {
-          const message = `Model nie odpowiedział w ciągu ${Math.round(EXTRACT_TIMEOUT_MS / 1000)} s. Sprawdź, czy backend działa, i spróbuj ponownie.`;
+          const message = `Brak odpowiedzi w ciągu ${Math.round(EXTRACT_TIMEOUT_MS / 1000)} s. Backend mógł zapisać wydarzenia. Sprawdź Google Calendar przed ponowieniem.`;
           setStatuses((s) => ({ ...s, [id]: { state: "error", message } }));
           return;
         }
@@ -163,7 +163,7 @@ function App() {
     ({ noteId, taskId }: TaskRef) => {
       updateNote(noteId, (n) =>
         n.result
-          ? { ...n, result: { tasks: n.result.tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)) } }
+          ? { ...n, result: { ...n.result, tasks: n.result.tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)) } }
           : n,
       );
     },

@@ -124,6 +124,32 @@ function ErrorReply({ message, onRetry }: { message: string; onRetry: () => void
   );
 }
 
+function ScheduleNotice({ note }: { note: Note }) {
+  const report = note.result?.schedule;
+  if (!report) return null;
+  const created = report.results.filter((result) => result.status === "created").length;
+  const labels = {
+    failed: "nie zapisano",
+    unknown: "wynik zapisu nieznany — sprawdź Google Calendar",
+    not_attempted: "nie wysłano do Google Calendar",
+  };
+  return (
+    <div role="status" className="border-b bg-card px-6 py-3 text-sm">
+      <p>Zapisano w Google Calendar: {created} z {report.results.length} wydarzeń.</p>
+      {report.status !== "completed" && (
+        <>
+          <p className="mt-1 text-destructive">Nie zapisano wszystkich wydarzeń. Ponowne wysłanie całej notatki może utworzyć duplikaty.</p>
+          <ul className="mt-1 list-disc pl-5 text-muted-foreground">
+            {report.results.map((result, index) => result.status !== "created" && (
+              <li key={index}>{result.event.summary}: {labels[result.status]}. {result.error?.message}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
 function EmptyState() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 pb-10 text-center">
@@ -202,8 +228,8 @@ export function ChatView(props: Props) {
             <AlertDialogHeader>
               <AlertDialogTitle>Usunąć czat?</AlertDialogTitle>
               <AlertDialogDescription>
-                „{displayTitle(note)}” zostanie usunięty razem z zadaniami (znikną też z kalendarza). Tego nie da się
-                cofnąć.
+                „{displayTitle(note)}” zostanie usunięty razem z lokalnymi zadaniami. Wydarzenia w Google Calendar
+                pozostaną. Usunięcia lokalnej notatki nie da się cofnąć.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -215,6 +241,8 @@ export function ChatView(props: Props) {
           </AlertDialogContent>
         </AlertDialog>
       </header>
+
+      {!loading && <ScheduleNotice note={note} />}
 
       {/* zakładka: czat */}
       <TabsContent value="chat" className="flex min-h-0 flex-1 flex-col">
@@ -228,7 +256,7 @@ export function ChatView(props: Props) {
             {status.state === "cancelled" && (
               <div className="flex flex-1 flex-col items-center justify-end gap-1 pb-2 text-center text-sm text-muted-foreground">
                 <Square className="size-4" />
-                Analiza zatrzymana. Możesz poprawić notatkę i spróbować ponownie.
+                Oczekiwanie zatrzymane. Backend mógł zapisać wydarzenia — sprawdź Google Calendar przed ponowieniem.
               </div>
             )}
             {!loading && status.state === "error" && <ErrorReply message={status.message} onRetry={analyze} />}

@@ -95,7 +95,7 @@ const taskKey = (t: Task) => `${t.action.toLocaleLowerCase("pl")}|${t.date}|${t.
 export function carryOverDone(prev: NoteResult | null, next: NoteResult): NoteResult {
   if (!prev) return next;
   const doneKeys = new Set(prev.tasks.filter((t) => t.done).map(taskKey));
-  return { tasks: next.tasks.map((t) => ({ ...t, done: doneKeys.has(taskKey(t)) })) };
+  return { ...next, tasks: next.tasks.map((t) => ({ ...t, done: doneKeys.has(taskKey(t)) })) };
 }
 
 export function formatDate(iso: string): string {
