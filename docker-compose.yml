@@ -1,0 +1,18 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: note2task-ollama
+    # Port 11434 (wymaga zatrzymania lokalnej usługi: sudo systemctl stop ollama)
+    ports:
+      - "11434:11434"
+    volumes:
+      # Podmontowanie modeli z systemu hosta (nie pobiera modelu na nowo!)
+      - /usr/share/ollama/.ollama/models:/root/.ollama/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
