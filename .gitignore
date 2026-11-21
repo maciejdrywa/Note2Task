@@ -1,1 +1,21 @@
-test/charts
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Generated outputs
+events_*.json
+output_*.json
+evaluation_results.json
+
+# Local configuration
+.env
+.env.*
+!.env.example
+*.log

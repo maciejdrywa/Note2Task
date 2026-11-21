@@ -1,0 +1,15 @@
+.git/
+venv/
+.venv/
+env/
+Data/
+**/__pycache__/
+**/.pytest_cache/
+**/*.py[cod]
+backend/tests/
+events_*.json
+output_*.json
+evaluation_results.json
+
+.env
+.env.*
