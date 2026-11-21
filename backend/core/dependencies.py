@@ -8,6 +8,9 @@ from backend.core.config import Settings, get_settings
 from backend.services.extraction_service import ExtractionService
 from backend.services.note_service import NoteService
 from backend.services.health_service import HealthService
+from backend.clients.google_calendar import GoogleCalendarClient
+from backend.core.google_auth import GoogleCredentialsProvider
+from backend.services.scheduling_service import SchedulingService
 
 
 def get_ollama_client(settings: Annotated[Settings, Depends(get_settings)]) -> OllamaClient:
@@ -27,3 +30,14 @@ def get_note_service(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> NoteService:
     return NoteService(extractor, settings)
+
+
+def get_google_calendar_client(settings: Annotated[Settings, Depends(get_settings)]) -> GoogleCalendarClient:
+    return GoogleCalendarClient(settings, GoogleCredentialsProvider(settings))
+
+
+def get_scheduling_service(
+    notes: Annotated[NoteService, Depends(get_note_service)],
+    calendar: Annotated[GoogleCalendarClient, Depends(get_google_calendar_client)],
+) -> SchedulingService:
+    return SchedulingService(notes, calendar)
